@@ -1,0 +1,10 @@
+apiVersion: hub.openshift.io/v1alpha1
+kind: SpokeCluster
+metadata:
+  name: spoke
+spec:
+  apiServer: ${SPOKE_API_SERVER}
+  credentialSource:
+    secret:
+      name: spoke-admin-kubeconfig-spoke
+      namespace: openshift-lightspeed

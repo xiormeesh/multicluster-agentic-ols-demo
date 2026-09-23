@@ -18,7 +18,7 @@ Options:
 USAGE
 }
 
-build_images=false
+build_images=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --build-images) build_images=true ;;
@@ -28,9 +28,16 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
-if [[ "$build_images" == true ]]; then
-  run_stage "00-images" install
+load_demo_config
+if [[ -z "$build_images" ]]; then
+  build_images="${WITH_IMAGES:-false}"
 fi
+
+case "$build_images" in
+  true) run_stage "00-images" install ;;
+  false) ;;
+  *) fail "WITH_IMAGES must be true or false" ;;
+esac
 
 for stage in \
   "01-agentic-ols" \

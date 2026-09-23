@@ -27,7 +27,9 @@ load_demo_config() {
   readonly NAMESPACE="openshift-lightspeed"
   readonly SPOKE_NAME="spoke"
   IMAGE_LOCK_FILE="${IMAGE_LOCK_FILE:-.demo/image-lock.env}"
-  IMAGE_LOCK_FILE="${DEMO_ROOT}/${IMAGE_LOCK_FILE}"
+  if [[ "$IMAGE_LOCK_FILE" != /* ]]; then
+    IMAGE_LOCK_FILE="${DEMO_ROOT}/${IMAGE_LOCK_FILE}"
+  fi
 
   if [[ -f "$IMAGE_LOCK_FILE" ]]; then
     # shellcheck disable=SC1090

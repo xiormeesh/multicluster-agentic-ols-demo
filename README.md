@@ -2,30 +2,50 @@
 
 A retryable hub-and-spoke setup for demonstrating OLS-3950 and OLS-3951.
 
-## Status
-
-The lifecycle foundation is in place. The numbered installation stages are
-added and validated one at a time. Do not run `setup.sh` until stages 01 through
-05 are implemented.
-
-## Intended workflow
+## Setup
 
 ```text
-./setup.sh                 install a previously locked image set
-./setup.sh --build-images  build controller images, lock digests, then install
+./setup.sh                 install the locked controller image set
+./setup.sh --build-images  one-off image-build override
 manifests/<stage>/install.sh
 manifests/<stage>/uninstall.sh
 ./teardown.sh
 ```
 
-Image builds use a demo-owned gitignored source cache. Cluster installation
-uses immutable image digests from the generated `.demo/image-lock.env` file.
+The three rebuilt controller images are pushed to the public `quay.io/kgordeev`
+namespace with the convenience tag `latest`. Stage `00-images` immediately
+resolves those tags to immutable digests in the gitignored
+`.demo/image-lock.env` file. All cluster stages consume the digest lock, never
+`latest`. Stage 00 uses the local OpenShift pull secret for Red Hat base-image
+pulls and requires an active interactive Quay login before pushing.
 
-## Configuration
+## Image sources
+
+Stage `00-images` maintains its own gitignored source cache under
+`.demo/sources`, so it never modifies sibling development checkouts. By default
+it builds `main` from each upstream repository. Set these optional local values
+when a controller must come from a PR branch:
+
+```text
+AGENTIC_OPERATOR_SOURCE_URL
+AGENTIC_OPERATOR_SOURCE_REF
+HUB_SOURCE_URL
+HUB_SOURCE_REF
+AAA_SOURCE_URL
+AAA_SOURCE_REF
+```
+
+Use a fork URL plus its branch name for a PR, while leaving the other
+controllers on upstream `main`. The Agentic OLS quickstart retains its
+Konflux-backed sandbox image because the demo rebuilds only the three
+controllers.
+
+## Local configuration
 
 Copy `.env.example` to `.env`. Keep kubeconfig paths and the OpenAI key only in
-that untracked file. The three rebuilt controller images come from the generated
-image lock; the Agentic OLS quickstart retains its Konflux-backed sandbox image.
+that untracked file. Set `WITH_IMAGES=true` in `.env` when setup should rebuild
+all three controller images before installation. `openshift-lightspeed` and the
+single registered spoke name `spoke` are fixed demo resource names.
 
 ## Safety
 

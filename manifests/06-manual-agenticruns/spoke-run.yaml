@@ -1,0 +1,20 @@
+apiVersion: agentic.openshift.io/v1alpha1
+kind: AgenticRun
+metadata:
+  name: direct-spoke-smoke
+  namespace: openshift-lightspeed
+spec:
+  targetCluster: spoke
+  targetNamespaces:
+  - openshift-lightspeed-managed
+  request: |
+    Analyze Deployment resources in the openshift-lightspeed-managed namespace
+    on the target cluster. Confirm their current state and report the findings.
+
+    Execution: create a ConfigMap named multicluster-proof in the
+    openshift-lightspeed-managed namespace with data key verified and value true.
+    Verify that the ConfigMap exists after creation.
+  analysis:
+    agent: default
+  execution:
+    agent: default
