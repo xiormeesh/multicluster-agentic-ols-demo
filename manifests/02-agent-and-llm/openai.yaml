@@ -22,6 +22,6 @@ spec:
     effort: high
     summary: auto
   timeouts:
-    analysisSeconds: 300
-    executionSeconds: 300
-    verificationSeconds: 300
+    analysisSeconds: 600
+    executionSeconds: 600
+    verificationSeconds: 600

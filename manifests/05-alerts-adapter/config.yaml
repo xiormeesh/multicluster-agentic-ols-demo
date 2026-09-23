@@ -1,0 +1,17 @@
+pollInterval: 10s
+preRunDelay: 0s
+postRunDelay: 0s
+filtering:
+  allowedReceivers:
+  - critical
+deduplication:
+  ignoredLabels:
+  - pod
+  - instance
+  - endpoint
+  - uid
+tools:
+  skills:
+  - image: quay.io/openshiftanalytics/agentic-skills:latest
+    paths:
+    - /skills/cluster-troubleshoot/investigate-alert

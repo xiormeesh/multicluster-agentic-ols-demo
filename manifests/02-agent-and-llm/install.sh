@@ -19,7 +19,7 @@ hub_oc get llmprovider/openai -n "$NAMESPACE" >/dev/null
 hub_oc get agents.agentic.openshift.io/default -n "$NAMESPACE" >/dev/null
 hub_oc get approvalpolicy/cluster >/dev/null
 hub_oc get agents.agentic.openshift.io/default -n "$NAMESPACE" \
-  -o jsonpath='{.spec.timeouts.analysisSeconds}' | grep -qx '300'
+  -o jsonpath='{.spec.timeouts.analysisSeconds}' | grep -qx '600'
 hub_oc get approvalpolicy/cluster \
   -o jsonpath='{.spec.stages[?(@.name=="Analysis")].approval}' | grep -qx 'Automatic'
 hub_oc get approvalpolicy/cluster \
