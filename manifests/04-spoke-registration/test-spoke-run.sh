@@ -9,7 +9,7 @@ source "$DIR/../../scripts/common.sh"
 load_demo_config
 require_cluster_config
 
-hub_oc apply -f "$DIR/spoke-run.yaml"
+hub_oc apply -f "$DIR/direct-spoke-run.yaml"
 hub_oc wait --for=condition=Analyzed=True \
   agenticruns.agentic.openshift.io/direct-spoke-smoke -n "$NAMESPACE" \
   --timeout=600s

@@ -1,0 +1,17 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: demo-critical-alert
+  namespace: openshift-monitoring
+spec:
+  groups:
+    - name: demo
+      rules:
+        - alert: DemoCriticalAlert
+          expr: vector(1)
+          labels:
+            severity: critical
+            namespace: openshift-monitoring
+          annotations:
+            summary: Demo critical alert for agentic run testing
+            description: Synthetic critical alert that always fires. Delete the PrometheusRule to clear.

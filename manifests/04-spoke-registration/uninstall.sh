@@ -9,6 +9,7 @@ source "$DIR/../../scripts/common.sh"
 load_demo_config
 require_cluster_config
 
+"$DIR/cleanup-spoke-run.sh"
 hub_oc delete "spokecluster/${SPOKE_NAME}" --ignore-not-found
 hub_oc wait --for=delete "spokecluster/${SPOKE_NAME}" --timeout=300s
 hub_oc delete "secret/spoke-admin-kubeconfig-${SPOKE_NAME}" -n "$NAMESPACE" \

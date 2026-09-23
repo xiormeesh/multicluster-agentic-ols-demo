@@ -1,0 +1,15 @@
+apiVersion: agentic.openshift.io/v1alpha1
+kind: ApprovalPolicy
+metadata:
+  name: cluster
+spec:
+  maxConcurrentRuns: 5
+  stages:
+    - name: Analysis
+      approval: Manual
+    - name: Execution
+      approval: Manual
+    - name: Verification
+      approval: Automatic
+    - name: Escalation
+      approval: Automatic

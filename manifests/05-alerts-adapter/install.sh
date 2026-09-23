@@ -33,8 +33,12 @@ hub_oc rollout restart deployment/lightspeed-hub-alerts-adapter -n "$NAMESPACE"
 hub_oc rollout status deployment/lightspeed-hub-alerts-adapter -n "$NAMESPACE" \
   --timeout=300s
 
-hub_oc get configmap/hub-alerts-adapter-config -n "$NAMESPACE" \
-  -o jsonpath='{.data.config\.yaml}' | grep -Fq -- '- critical'
+config_yaml="$(hub_oc get configmap/hub-alerts-adapter-config -n "$NAMESPACE" \
+  -o jsonpath='{.data.config\.yaml}')"
+grep -Fqx 'pollInterval: "45s"' <<< "$config_yaml"
+grep -Fqx 'preRunDelay: "10m"' <<< "$config_yaml"
+grep -Fqx 'postRunDelay: "2h"' <<< "$config_yaml"
+grep -Fqx '  - critical' <<< "$config_yaml"
 if [[ -n "${SPOKE_ROUTER_IP:-}" ]]; then
   hub_oc get deployment/lightspeed-hub-alerts-adapter -n "$NAMESPACE" \
     -o jsonpath='{.spec.template.spec.hostAliases[0].ip}' | \

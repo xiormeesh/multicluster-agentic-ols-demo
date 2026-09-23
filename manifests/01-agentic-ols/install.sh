@@ -21,6 +21,7 @@ case "${WITH_POSTGRES:-false}" in
 esac
 
 KUBECONFIG="$HUB_KUBECONFIG" bash "${QUICKSTART_DIR}/install.sh" "${args[@]}"
+hub_oc apply -f "$DIR/approval-policy.yaml"
 
 hub_oc rollout status deployment/lightspeed-agentic-operator -n "$NAMESPACE" \
   --timeout=300s
@@ -33,4 +34,6 @@ hub_oc get crd agenticruns.agentic.openshift.io >/dev/null
 hub_oc get configmap/lightspeed-agentic-configuration -n "$NAMESPACE" >/dev/null
 hub_oc get deployment/lightspeed-agentic-alerts-adapter -n "$NAMESPACE" \
   -o jsonpath='{.spec.replicas}' | grep -qx '0'
+hub_oc get approvalpolicy/cluster \
+  -o jsonpath='{.spec.stages[?(@.name=="Analysis")].approval}' | grep -qx 'Manual'
 printf 'Agentic OLS is ready and its single-cluster adapter is disabled\n'

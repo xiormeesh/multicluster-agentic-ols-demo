@@ -21,7 +21,7 @@ hub_oc get approvalpolicy/cluster >/dev/null
 hub_oc get agents.agentic.openshift.io/default -n "$NAMESPACE" \
   -o jsonpath='{.spec.timeouts.analysisSeconds}' | grep -qx '600'
 hub_oc get approvalpolicy/cluster \
-  -o jsonpath='{.spec.stages[?(@.name=="Analysis")].approval}' | grep -qx 'Automatic'
+  -o jsonpath='{.spec.stages[?(@.name=="Analysis")].approval}' | grep -qx 'Manual'
 hub_oc get approvalpolicy/cluster \
   -o jsonpath='{.spec.stages[?(@.name=="Execution")].approval}' | grep -qx 'Manual'
 printf 'OpenAI provider and default Agent are ready\n'

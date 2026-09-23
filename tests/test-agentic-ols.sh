@@ -13,6 +13,8 @@ grep -Fq -- '--operator-image=${AGENTIC_OPERATOR_IMAGE}' "$INSTALL"
 grep -Fq -- 'args+=(--postgres)' "$INSTALL"
 grep -Fq -- 'lightspeed-agentic-alerts-adapter' "$INSTALL"
 grep -Fq -- 'scale deployment/lightspeed-agentic-alerts-adapter' "$INSTALL"
+grep -Fq -- 'approval-policy.yaml' "$INSTALL"
+grep -Fq 'approval: Manual' "${ROOT}/manifests/01-agentic-ols/approval-policy.yaml"
 grep -Fq -- 'uninstall.sh" --force' "$UNINSTALL"
 
 if grep -Fq 'NAMESPACE="$NAMESPACE"' "$INSTALL" "$UNINSTALL"; then

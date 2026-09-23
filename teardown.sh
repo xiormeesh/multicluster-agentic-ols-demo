@@ -24,7 +24,6 @@ fi
 
 for stage in \
   "07-demo-incident" \
-  "06-manual-agenticruns" \
   "05-alerts-adapter" \
   "04-spoke-registration" \
   "03-lightspeed-hub" \

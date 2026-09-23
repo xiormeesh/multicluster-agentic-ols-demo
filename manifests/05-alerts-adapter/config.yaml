@@ -1,6 +1,6 @@
-pollInterval: 10s
-preRunDelay: 0s
-postRunDelay: 0s
+pollInterval: "45s"
+preRunDelay: "10m"
+postRunDelay: "2h"
 filtering:
   allowedReceivers:
   - critical

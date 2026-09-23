@@ -26,6 +26,22 @@ AAA normally uses pod DNS to reach the spoke Alertmanager route. Set
 hub AAA pod. Stage 05 then adds a pod host alias for the fixed spoke route;
 when the variable is absent, it leaves pod DNS unchanged.
 
+## Live alert-driven incident
+
+The hub-local and direct target-spoke smoke tests live with their corresponding setup stages.
+For the demo flow, stage 07 creates an always-firing critical PrometheusRule
+on the spoke, then waits for hub AAA to create the target-spoke run:
+
+```bash
+manifests/07-demo-incident/trigger.sh
+manifests/07-demo-incident/check.sh
+```
+
+The check command prints the generated AgenticRun name. Approve its execution
+in the hub console when ready. Run `manifests/07-demo-incident/resolve.sh` to
+delete the PrometheusRule and clear the alert. Stage 07 retains the run for
+inspection until its uninstall script is run.
+
 ## Image sources
 
 Stage `00-images` maintains its own gitignored source cache under

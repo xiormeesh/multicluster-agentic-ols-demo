@@ -19,5 +19,7 @@ grep -Fq -- 'spoke-admin-kubeconfig-spoke' "${SPOKE_STAGE}/spokecluster.yaml"
 grep -Fq -- 'for condition in Connected Provisioned AdaptersReady Ready' \
   "${SPOKE_STAGE}/install.sh"
 grep -Fq -- 'condition=${condition}' "${SPOKE_STAGE}/install.sh"
+grep -Fq 'targetCluster: spoke' "${SPOKE_STAGE}/direct-spoke-run.yaml"
+grep -Fq 'cleanup-spoke-run.sh' "${SPOKE_STAGE}/uninstall.sh"
 
 printf 'hub and spoke stage checks passed\n'
