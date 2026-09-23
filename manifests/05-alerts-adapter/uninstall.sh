@@ -11,8 +11,10 @@ require_cluster_config
 
 hub_oc patch configmap/hub-alerts-adapter-config -n "$NAMESPACE" --type=merge \
   -p '{"data":{"config.yaml":"filtering:\n  allowedReceivers: []\n"}}'
-hub_oc patch deployment/lightspeed-hub-alerts-adapter -n "$NAMESPACE" \
-  --type=merge -p '{"spec":{"template":{"spec":{"hostAliases":null}}}}'
+if [[ -n "${SPOKE_ROUTER_IP:-}" ]]; then
+  hub_oc patch deployment/lightspeed-hub-alerts-adapter -n "$NAMESPACE" \
+    --type=merge -p '{"spec":{"template":{"spec":{"hostAliases":null}}}}'
+fi
 hub_oc rollout restart deployment/lightspeed-hub-alerts-adapter -n "$NAMESPACE"
 hub_oc rollout status deployment/lightspeed-hub-alerts-adapter -n "$NAMESPACE" \
   --timeout=300s

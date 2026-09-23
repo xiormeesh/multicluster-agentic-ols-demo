@@ -9,13 +9,13 @@ source "$DIR/../../scripts/common.sh"
 load_demo_config
 require_cluster_config
 require_command python3
-: "${SPOKE_ROUTER_IP:?SPOKE_ROUTER_IP is required}"
 
 ALERTMANAGER_HOST="alertmanager-main-openshift-monitoring.apps.spoke.shiftlet.local"
 hub_oc create configmap hub-alerts-adapter-config -n "$NAMESPACE" \
   --from-file=config.yaml="$DIR/config.yaml" --dry-run=client -o yaml | hub_oc apply -f -
 
-patch="$(SPOKE_ROUTER_IP="$SPOKE_ROUTER_IP" python3 -c '
+if [[ -n "${SPOKE_ROUTER_IP:-}" ]]; then
+  patch="$(SPOKE_ROUTER_IP="$SPOKE_ROUTER_IP" python3 -c '
 import json
 import os
 print(json.dumps({"spec": {"template": {"spec": {"hostAliases": [{
@@ -23,16 +23,23 @@ print(json.dumps({"spec": {"template": {"spec": {"hostAliases": [{
     "hostnames": ["alertmanager-main-openshift-monitoring.apps.spoke.shiftlet.local"],
 }]}}}}))
 ')"
-hub_oc patch deployment/lightspeed-hub-alerts-adapter -n "$NAMESPACE" \
-  --type=merge -p "$patch"
+  hub_oc patch deployment/lightspeed-hub-alerts-adapter -n "$NAMESPACE" \
+    --type=merge -p "$patch"
+else
+  printf 'SPOKE_ROUTER_IP is unset, using normal pod DNS for %s\n' \
+    "$ALERTMANAGER_HOST"
+fi
 hub_oc rollout restart deployment/lightspeed-hub-alerts-adapter -n "$NAMESPACE"
 hub_oc rollout status deployment/lightspeed-hub-alerts-adapter -n "$NAMESPACE" \
   --timeout=300s
 
 hub_oc get configmap/hub-alerts-adapter-config -n "$NAMESPACE" \
   -o jsonpath='{.data.config\.yaml}' | grep -Fq -- '- critical'
-hub_oc get deployment/lightspeed-hub-alerts-adapter -n "$NAMESPACE" \
-  -o jsonpath='{.spec.template.spec.hostAliases[0].ip}' | grep -qx "$SPOKE_ROUTER_IP"
+if [[ -n "${SPOKE_ROUTER_IP:-}" ]]; then
+  hub_oc get deployment/lightspeed-hub-alerts-adapter -n "$NAMESPACE" \
+    -o jsonpath='{.spec.template.spec.hostAliases[0].ip}' | \
+    grep -qx "$SPOKE_ROUTER_IP"
+fi
 
 sleep 15
 if hub_oc logs deployment/lightspeed-hub-alerts-adapter -n "$NAMESPACE" \

@@ -19,6 +19,13 @@ resolves those tags to immutable digests in the gitignored
 `latest`. Stage 00 uses the local OpenShift pull secret for Red Hat base-image
 pulls and requires an active interactive Quay login before pushing.
 
+## Spoke Alertmanager DNS
+
+AAA normally uses pod DNS to reach the spoke Alertmanager route. Set
+`SPOKE_ROUTER_IP` in local `.env` only when that route cannot resolve from the
+hub AAA pod. Stage 05 then adds a pod host alias for the fixed spoke route;
+when the variable is absent, it leaves pod DNS unchanged.
+
 ## Image sources
 
 Stage `00-images` maintains its own gitignored source cache under
