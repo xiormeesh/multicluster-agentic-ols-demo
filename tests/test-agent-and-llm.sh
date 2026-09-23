@@ -19,6 +19,7 @@ grep -Fq "grep -qx 'Manual'" "${STAGE}/install.sh"
 grep -Fq 'agents.agentic.openshift.io/default' "${STAGE}/install.sh"
 grep -Fq 'deploy-test-workload.yaml' "${STAGE}/test-hub-run.sh"
 grep -Fq 'condition=Analyzed=True' "${STAGE}/test-hub-run.sh"
+grep -Fq 'approve analysis in the console' "${STAGE}/test-hub-run.sh"
 grep -Fq 'condition=Executed=True' "${STAGE}/check-hub-run.sh"
 grep -Fq 'deploy-test-workload' "${STAGE}/uninstall.sh"
 

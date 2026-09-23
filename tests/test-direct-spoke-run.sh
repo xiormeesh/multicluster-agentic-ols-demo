@@ -12,6 +12,7 @@ done
 grep -Fq 'targetCluster: spoke' "${STAGE}/direct-spoke-run.yaml"
 grep -Fq 'multicluster-proof' "${STAGE}/direct-spoke-run.yaml"
 grep -Fq 'condition=Analyzed=True' "${STAGE}/test-spoke-run.sh"
+grep -Fq 'approve analysis in the console' "${STAGE}/test-spoke-run.sh"
 grep -Fq 'condition=Executed=True' "${STAGE}/check-spoke-run.sh"
 grep -Fq 'direct-spoke-smoke' "${STAGE}/cleanup-spoke-run.sh"
 

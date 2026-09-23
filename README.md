@@ -37,10 +37,11 @@ manifests/07-demo-incident/trigger.sh
 manifests/07-demo-incident/check.sh
 ```
 
-The check command prints the generated AgenticRun name. Approve its execution
-in the hub console when ready. Run `manifests/07-demo-incident/resolve.sh` to
-delete the PrometheusRule and clear the alert. Stage 07 retains the run for
-inspection until its uninstall script is run.
+The check command prints the generated AgenticRun name. Approve Analysis and
+then Execution in the hub console when ready. Run
+`manifests/07-demo-incident/resolve.sh` to delete the PrometheusRule and clear
+the alert. Stage 07 retains the run for inspection until its uninstall script
+is run.
 
 ## Image sources
 

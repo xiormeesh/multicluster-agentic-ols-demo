@@ -14,6 +14,7 @@ EXAMPLE="${DEMO_ROOT}/.demo/sources/agentic-operator/hack/quickstart/examples/de
 require_file "$EXAMPLE"
 
 hub_oc apply -f "$EXAMPLE"
+printf 'approve analysis in the console, then this script will wait for its result\n'
 hub_oc wait --for=condition=Analyzed=True \
   "agenticruns.agentic.openshift.io/${RUN_NAME}" -n "$NAMESPACE" --timeout=600s
 
