@@ -11,6 +11,7 @@ for script in "${HUB_STAGE}"/*.sh "${SPOKE_STAGE}"/*.sh; do
 done
 
 grep -Fq -- '--alerts-adapter-image=${AAA_IMAGE}' "${HUB_STAGE}/hub.yaml"
+grep -Fq -- '--health-check-interval=15s' "${HUB_STAGE}/hub.yaml"
 grep -Fq -- 'HubConfig' "${HUB_STAGE}/hub.yaml"
 grep -Fq -- 'export HUB_IMAGE AAA_IMAGE' "${HUB_STAGE}/install.sh"
 grep -Fq -- 'lightspeed-hub-alerts-adapter' "${HUB_STAGE}/install.sh"

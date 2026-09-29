@@ -46,6 +46,7 @@ spec:
         command: ["/manager"]
         args:
         - --leader-elect
+        - --health-check-interval=15s
         - --health-probe-bind-address=:8081
         - --namespace=openshift-lightspeed
         - --alerts-adapter-image=${AAA_IMAGE}
