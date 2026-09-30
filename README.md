@@ -2,22 +2,38 @@
 
 A retryable hub-and-spoke setup for demonstrating OLS-3950 and OLS-3951.
 
-## Setup
+## Recommended setup: core hub and spoke
 
-```text
-./setup.sh                                  install stages 01-05 from locked images
-./setup.sh --core                           install only stages 01-04
-./setup.sh --core --build-images            rebuild and lock images first
-manifests/<stage>/install.sh                rerun a failed stage after diagnosis
-./teardown.sh --confirm-namespace-wipe     remove all stages (including incident)
+Copy `.env.example` to the gitignored `.env`, set both kubeconfig paths and
+supply `ONLY_OLS_OPENAI_API_KEY` through the environment or `.env`. Log in to
+Quay with an account that can push to the configured image repository using
+`podman login quay.io` before building images. From the repo root, run:
+
+```bash
+./setup.sh --core --build-images
 ```
 
-The three rebuilt controller images are pushed to the configured image registry
-with the convenience tag `latest`. Stage `00-images` immediately
-resolves those tags to immutable digests in the gitignored
-`.demo/image-lock.env` file. All cluster stages consume the digest lock, never
-`latest`. Stage 00 uses the local OpenShift pull secret for Red Hat base-image
-pulls and requires an active interactive Quay login before pushing.
+This runs optional image stage 00, then stages 01–04: Agentic OLS, a real LLM
+and Agent, lightspeed-hub, and spoke registration. Stage 00 builds and pushes
+three controller images tagged `latest`, then records immutable digests and
+source commits in gitignored `.demo/image-lock.env`; deployments use only the
+digests. Stage 00 uses the local OpenShift pull secret for Red Hat base-image
+pulls. If it fails, setup stops before cluster installation; inspect the error
+instead of proceeding with an old or partial image lock.
+
+To reuse an existing complete image lock and cached source checkouts, run
+`./setup.sh --core` instead. Rerunning setup or a failed
+`manifests/<stage>/install.sh` retries installation after diagnosing the error.
+Core mode skips stage 05 Alertmanager configuration, but stage 03 still creates
+the hub-owned adapter with an empty receiver allowlist, and stage 04 waits for
+it to become ready.
+
+For the **full alert demo**, run `./setup.sh` (stages 01–05) or
+`./setup.sh --build-images` to rebuild first. Stage 05 enables the `critical`
+receiver and may create AgenticRuns for existing matching alerts. Setup never
+runs stage 06; the demo incident is always triggered separately. To remove
+either setup, run `./teardown.sh --confirm-namespace-wipe` after reading the
+[destructive scope](#safety) below.
 
 ## Spoke Alertmanager DNS
 
@@ -66,17 +82,21 @@ controllers.
 
 ## Local configuration
 
-Copy `.env.example` to `.env`. Keep kubeconfig paths and the OpenAI key only in
-that untracked file. Set `WITH_IMAGES=true` in `.env` when setup should rebuild
-all three controller images before installation. `openshift-lightspeed` and the
-single registered spoke name `spoke` are fixed demo resource names.
+Keep `.env`, kubeconfig paths and credentials untracked. Set
+`WITH_IMAGES=true` in `.env` if every setup invocation should rebuild all
+three controller images; `--build-images` rebuilds for just one invocation.
+`openshift-lightspeed` and the registered spoke name `spoke` are fixed demo
+resource names.
 
 ## Safety
 
-Setup with `--core` still deploys the hub-owned multicluster adapter in stage
-03; stage 04 waits for its rollout after registration. It does not configure
-Alertmanager polling or create the incident. Existing adapter configuration
-from an earlier full setup is not reset by `--core`; use a fresh environment.
+Stage 01 quickstart installs `lightspeed-agentic-alerts-adapter`, the
+single-cluster adapter, then scales it to 0 so it cannot compete with the
+hub-owned `lightspeed-hub-alerts-adapter`. Stage 03 creates the hub-owned
+multicluster adapter even with `--core`; stage 04 waits for its rollout after
+registration. Core setup does not configure Alertmanager polling or create the
+incident. Configuration from an earlier full setup is not reset by `--core`;
+use a fresh environment.
 
 Teardown always removes stage 06, then stages 05-01 in reverse order. It gives
 controller cleanup 60 seconds, then bypasses *known* run/spoke finalizers only
