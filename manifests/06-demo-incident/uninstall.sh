@@ -14,9 +14,11 @@ state_file="${DEMO_ROOT}/.demo/demo-incident.env"
 if [[ -f "$state_file" ]]; then
   # shellcheck disable=SC1090
   source "$state_file"
-  if [[ -n "${DEMO_INCIDENT_RUN:-}" ]]; then
+  if [[ -n "${DEMO_INCIDENT_RUN:-}" ]] && \
+    hub_exists crd agenticruns.agentic.openshift.io; then
     hub_oc delete agenticruns.agentic.openshift.io "$DEMO_INCIDENT_RUN" \
-      -n "$NAMESPACE" --ignore-not-found
+      -n "$NAMESPACE" --ignore-not-found --wait=false
+    printf 'Incident deletion requested; stage 01 handles any stuck run finalizers during the namespace wipe\n' >&2
   fi
   unset DEMO_INCIDENT_RUN
   rm -f "$state_file"

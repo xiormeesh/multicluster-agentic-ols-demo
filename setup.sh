@@ -8,19 +8,23 @@ source "$ROOT/scripts/common.sh"
 
 usage() {
   cat <<'USAGE'
-Usage: ./setup.sh [--build-images]
+Usage: ./setup.sh [--core] [--build-images]
 
-Install the required Agentic OLS hub and spoke setup stages.
+Install stages 01-05 by default, or only 01-04 for direct hub/spoke testing.
+Stage 06 (incident) is always manual. Rerun after a failed stage to resume.
 
 Options:
+  --core          stop after spoke registration (no Alertmanager configuration)
   --build-images  build and lock controller images before cluster setup
   -h, --help      show this help
 USAGE
 }
 
 build_images=""
+core=false
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --core) core=true ;;
     --build-images) build_images=true ;;
     -h|--help) usage; exit 0 ;;
     *) fail "unknown argument: $1" ;;
@@ -43,8 +47,12 @@ for stage in \
   "01-agentic-ols" \
   "02-agent-and-llm" \
   "03-lightspeed-hub" \
-  "04-spoke-registration" \
-  "05-alerts-adapter"; do
+  "04-spoke-registration"; do
   printf '=== %s ===\n' "$stage"
   run_stage "$stage" install
 done
+
+if [[ "$core" == false ]]; then
+  printf '=== 05-alerts-adapter ===\n'
+  run_stage "05-alerts-adapter" install
+fi

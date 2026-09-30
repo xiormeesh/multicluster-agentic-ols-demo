@@ -5,15 +5,15 @@ A retryable hub-and-spoke setup for demonstrating OLS-3950 and OLS-3951.
 ## Setup
 
 ```text
-./setup.sh                 install the locked controller image set
-./setup.sh --build-images  one-off image-build override
-manifests/<stage>/install.sh
-manifests/<stage>/uninstall.sh
-./teardown.sh
+./setup.sh                                  install stages 01-05 from locked images
+./setup.sh --core                           install only stages 01-04
+./setup.sh --core --build-images            rebuild and lock images first
+manifests/<stage>/install.sh                rerun a failed stage after diagnosis
+./teardown.sh --confirm-namespace-wipe     remove all stages (including incident)
 ```
 
-The three rebuilt controller images are pushed to the public `quay.io/kgordeev`
-namespace with the convenience tag `latest`. Stage `00-images` immediately
+The three rebuilt controller images are pushed to the configured image registry
+with the convenience tag `latest`. Stage `00-images` immediately
 resolves those tags to immutable digests in the gitignored
 `.demo/image-lock.env` file. All cluster stages consume the digest lock, never
 `latest`. Stage 00 uses the local OpenShift pull secret for Red Hat base-image
@@ -29,18 +29,18 @@ when the variable is absent, it leaves pod DNS unchanged.
 ## Live alert-driven incident
 
 The hub-local and direct target-spoke smoke tests live with their corresponding setup stages.
-For the demo flow, stage 07 creates an always-firing critical PrometheusRule
+For the demo flow, stage 06 creates an always-firing critical PrometheusRule
 on the spoke, then waits for hub AAA to create the target-spoke run:
 
 ```bash
-manifests/07-demo-incident/trigger.sh
-manifests/07-demo-incident/check.sh
+manifests/06-demo-incident/trigger.sh
+manifests/06-demo-incident/check.sh
 ```
 
 The check command prints the generated AgenticRun name. Approve Analysis and
 then Execution in the hub console when ready. Run
-`manifests/07-demo-incident/resolve.sh` to delete the PrometheusRule and clear
-the alert. Stage 07 retains the run for inspection until its uninstall script
+`manifests/06-demo-incident/resolve.sh` to delete the PrometheusRule and clear
+the alert. Stage 06 retains the run for inspection until its uninstall script
 is run.
 
 ## Image sources
@@ -73,6 +73,26 @@ single registered spoke name `spoke` are fixed demo resource names.
 
 ## Safety
 
-Always remove the spoke registration while the hub controller is running. The
-hub controller must complete SpokeCluster finalizers before the hub stack is
-removed.
+Setup with `--core` still deploys the hub-owned multicluster adapter in stage
+03; stage 04 waits for its rollout after registration. It does not configure
+Alertmanager polling or create the incident. Existing adapter configuration
+from an earlier full setup is not reset by `--core`; use a fresh environment.
+
+Teardown always removes stage 06, then stages 05-01 in reverse order. It gives
+controller cleanup 60 seconds, then bypasses *known* run/spoke finalizers only
+in this explicitly confirmed disposable-cluster wipe. Unknown finalizers and
+API/auth failures stop teardown. It removes the spoke managed namespace and
+known hub/spoke cluster-scoped RBAC, then verifies namespace deletion. A forced
+finalizer bypass can leave other external resources behind; inspect failures
+before claiming the pair is clean.
+
+**Destructive scope:** the cached Agentic OLS quickstart uninstall uses `--force`
+and removes *all* AgenticRuns, approvals, results, Agents, providers and the
+entire `openshift-lightspeed` namespace, not only demo-owned objects. Inventory
+this shared namespace before confirming the wipe. Unrelated SpokeClusters
+block teardown before any deletion. Repeating teardown is safe only after
+checking the first failed stage and its cluster state; unexpected API errors
+must not be ignored. No remote images or local image lock are deleted.
+
+<!-- TODO: after OLS 2.0 merges classic and agentic OLS, migrate setup and
+teardown to the new installation and cleanup protocols instead of quickstart. -->

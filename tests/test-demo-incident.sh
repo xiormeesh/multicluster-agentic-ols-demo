@@ -3,7 +3,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-STAGE="${ROOT}/manifests/07-demo-incident"
+STAGE="${ROOT}/manifests/06-demo-incident"
 
 for file in prometheusrule.yaml trigger.sh check.sh resolve.sh uninstall.sh; do
   [[ -f "${STAGE}/${file}" ]]

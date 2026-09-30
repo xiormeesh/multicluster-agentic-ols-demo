@@ -61,6 +61,46 @@ spoke_oc() {
   KUBECONFIG="$SPOKE_KUBECONFIG" oc "$@"
 }
 
+# --ignore-not-found handles absence only; authentication/API failures still abort.
+hub_exists() {
+  local found
+  found="$(hub_oc get "$@" --ignore-not-found -o name)" || fail "hub resource lookup failed: $*"
+  [[ -n "$found" ]]
+}
+
+spoke_exists() {
+  local found
+  found="$(spoke_oc get "$@" --ignore-not-found -o name)" || fail "spoke resource lookup failed: $*"
+  [[ -n "$found" ]]
+}
+
+# Last resort for a confirmed disposable namespace wipe. Reject changed UIDs
+# and unknown finalizers rather than bypassing another controller's cleanup.
+clear_hub_finalizers() {
+  local resource="$1"
+  local allowed="$2"
+  shift 2
+  local uid finalizers patch
+  hub_exists "$resource" "$@" || return 0
+  uid="$(hub_oc get "$resource" "$@" -o jsonpath='{.metadata.uid}')" || fail "cannot read UID for $resource"
+  finalizers="$(hub_oc get "$resource" "$@" -o jsonpath='{.metadata.finalizers}')" || fail "cannot read finalizers for $resource"
+  require_command python3
+  patch="$(python3 -c '
+import json, sys
+uid, raw, allowed = sys.argv[1:]
+finalizers = json.loads(raw)
+if not finalizers or not set(finalizers).issubset(set(allowed.split(","))):
+    sys.exit("unexpected finalizers, refusing forced cleanup: " + raw)
+print(json.dumps([
+    {"op": "test", "path": "/metadata/uid", "value": uid},
+    {"op": "test", "path": "/metadata/finalizers", "value": finalizers},
+    {"op": "remove", "path": "/metadata/finalizers"},
+]))
+' "$uid" "$finalizers" "$allowed")" || fail "unsafe finalizers on $resource"
+  printf 'WARNING: bypassing known cleanup finalizers on %s; spoke-side artifacts may remain\n' "$resource" >&2
+  hub_oc patch "$resource" "$@" --type=json -p "$patch"
+}
+
 wait_for_deployment() {
   local cluster="$1"
   local deployment="$2"

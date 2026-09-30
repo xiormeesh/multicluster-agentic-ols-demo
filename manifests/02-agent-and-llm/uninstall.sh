@@ -10,7 +10,7 @@ load_demo_config
 require_cluster_config
 
 hub_oc delete "agenticruns.agentic.openshift.io/deploy-test-workload" -n "$NAMESPACE" \
-  --ignore-not-found
+  --ignore-not-found --wait=false
 hub_oc delete deployment/hello-test service/hello-test -n "$NAMESPACE" \
   --ignore-not-found
 hub_oc delete agents.agentic.openshift.io/default llmprovider/openai -n "$NAMESPACE" \
