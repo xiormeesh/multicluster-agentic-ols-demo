@@ -1,0 +1,23 @@
+# Recommended minimal MCE profile for the demo. Matches the short config in
+# wiki/openshift/install_mce.md#minimal-install-no-provisioning-components:
+# keeps cluster-manager, server-foundation, cluster-proxy-addon and
+# managedserviceaccount; disables only the provisioning components. Instance
+# name is "engine" by convention; only one MultiClusterEngine is allowed per
+# cluster, so install.sh skips creation when any instance already exists.
+apiVersion: multicluster.openshift.io/v1
+kind: MultiClusterEngine
+metadata:
+  name: engine
+spec:
+  localClusterName: local-cluster
+  availabilityConfig: Basic
+  overrides:
+    components:
+    - name: assisted-service
+      enabled: false
+    - name: discovery
+      enabled: false
+    - name: hive
+      enabled: false
+    - name: hypershift
+      enabled: false

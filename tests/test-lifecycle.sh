@@ -42,8 +42,15 @@ images="$(WITH_IMAGES=true bash "$tmp/setup.sh" --core)"
 [[ "$images" == $'=== 01-agentic-ols ==='* ]] && exit 1
 [[ "$images" == *'00-images install'* ]] && [[ "$images" == *'04-spoke-registration install'* ]]
 
+# --mce prepends the MCE prerequisite stage before the OLS stages.
+mce_core=$'=== 00-mce ===\n00-mce install\n'"${core}"
+assert_output "$mce_core" bash "$tmp/setup.sh" --mce --core
+
 removed=$'=== removing 06-demo-incident ===\n06-demo-incident uninstall\n=== removing 05-alerts-adapter ===\n05-alerts-adapter uninstall\n=== removing 04-spoke-registration ===\n04-spoke-registration uninstall\n=== removing 03-lightspeed-hub ===\n03-lightspeed-hub uninstall\n=== removing 02-agent-and-llm ===\n02-agent-and-llm uninstall\n=== removing 01-agentic-ols ===\n01-agentic-ols uninstall'
 MOCK_SPOKES='spokecluster.hub.openshift.io/spoke' assert_output "$removed" bash "$tmp/teardown.sh" --confirm-namespace-wipe
+# --mce appends the spoke detach last (first prerequisite in, last out).
+removed_mce="${removed}"$'\n=== removing 00-mce ===\n00-mce uninstall'
+MOCK_SPOKES='spokecluster.hub.openshift.io/spoke' assert_output "$removed_mce" bash "$tmp/teardown.sh" --confirm-namespace-wipe --mce
 if bash "$tmp/teardown.sh" > "$tmp/output" 2>&1; then
   printf 'expected namespace confirmation gate\n' >&2
   exit 1

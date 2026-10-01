@@ -35,6 +35,63 @@ runs stage 06; the demo incident is always triggered separately. To remove
 either setup, run `./teardown.sh --confirm-namespace-wipe` after reading the
 [destructive scope](#safety) below.
 
+## MCE environment (optional)
+
+By default the demo registers the spoke with a secret-mode `SpokeCluster`
+(direct admin kubeconfig). Pass `--mce` to also set up the MultiCluster Engine
+prerequisite needed for MCE-based spoke access development:
+
+```bash
+./setup.sh --core --mce
+```
+
+This runs the `00-mce` stage first (before the OLS stages). Every step is
+idempotent and detects existing resources before creating them, so a failed run
+can be rerun to resume:
+
+- installs the MCE operator via OLM **only if it is not already present** (if the
+  MCE CRD exists it leaves operator resources untouched, so a manual install is
+  never disturbed and no duplicate OperatorGroup is created)
+- ensures a `MultiClusterEngine` instance exists, creating the recommended
+  minimal `engine` instance only if none is present
+- imports the spoke as a `ManagedCluster` via `auto-import-secret`
+- ensures the `cluster-proxy` add-on, creating it only if MCE has not already
+  auto-deployed it via a global placement
+
+`cluster-proxy` is the konnectivity reverse tunnel the hub uses to reach the
+spoke kube-API; `managed-serviceaccount` is intentionally not enabled because
+the MCE credential path uses hub service-account tokens, not MSA tokens.
+
+### cluster-proxy and local DNS
+
+The `ManagedCluster` import is the part this stage owns, and it completes on
+its own. The `cluster-proxy` add-on additionally needs the spoke agent to open
+a konnectivity tunnel to the hub proxy endpoint
+(`cluster-proxy-anp.apps.<hub>`). In local clusters without cross-cluster apps
+DNS the spoke cannot resolve that hostname, so the add-on never reports
+`Available` (its health lease is never written). This is the same local-DNS
+limitation the `SPOKE_ROUTER_IP` note below works around in the other
+direction.
+
+The stage therefore treats cluster-proxy readiness as a **warning, not a
+failure** (wait bounded by `CLUSTER_PROXY_TIMEOUT`, default `120s`). It does not
+block OLS-3954 development, which is tested without a live tunnel. Live
+MCE-mode spoke access requires making the hub apps hostname resolve from inside
+the spoke, which is an environment/DNS task, not part of these scripts.
+
+`--mce` is additive: it does **not** change stage 04, which still registers the
+secret-mode `SpokeCluster`. Switching that to `credentialSource: mce` is
+separate product work and is layered on once the corresponding code exists.
+
+Set `MCE_CHANNEL` in local `.env` to override the operator channel (default
+`stable-2.11`).
+
+Teardown with `--mce` is a **partial** teardown: it detaches the spoke
+(`./teardown.sh --confirm-namespace-wipe --mce`) but deliberately leaves the
+operator and `MultiClusterEngine` instance installed, since reinstalling them
+is slow and they are shared environment infra. Remove them manually for a full
+MCE uninstall.
+
 ## Spoke Alertmanager DNS
 
 AAA normally uses pod DNS to reach the spoke Alertmanager route. Set

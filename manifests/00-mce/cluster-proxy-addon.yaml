@@ -1,0 +1,13 @@
+# cluster-proxy is the konnectivity reverse tunnel the hub uses to reach the
+# spoke kube-API (the transport the OLS-3954 MCE credential path relies on).
+# managed-serviceaccount is intentionally not enabled: the credential design
+# uses bounded per-spoke hub SA tokens + impersonation, not MSA tokens.
+# install.sh applies this only if the add-on is not already present, since some
+# MCE installs auto-deploy it via a global ClusterManagementAddOn placement.
+apiVersion: addon.open-cluster-management.io/v1alpha1
+kind: ManagedClusterAddOn
+metadata:
+  name: cluster-proxy
+  namespace: ${SPOKE_NAME}
+spec:
+  installNamespace: open-cluster-management-agent-addon

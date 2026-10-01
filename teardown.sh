@@ -10,7 +10,7 @@ source "$ROOT/scripts/common.sh"
 
 usage() {
   cat <<'USAGE'
-Usage: ./teardown.sh --confirm-namespace-wipe
+Usage: ./teardown.sh --confirm-namespace-wipe [--mce]
 
 Always removes incident and adapter configuration, then stages 04-01.
 This disposable-cluster reset deletes openshift-lightspeed on the hub and
@@ -22,14 +22,18 @@ Unrelated SpokeClusters block teardown before the first mutation.
 
 Options:
   --confirm-namespace-wipe  acknowledge the shared namespace-wide deletion
+  --mce                     also detach the spoke from MCE (partial: leaves the
+                            operator and MultiClusterEngine instance in place)
   -h, --help                show this help
 USAGE
 }
 
 confirmed=false
+mce=false
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --confirm-namespace-wipe) confirmed=true ;;
+    --mce) mce=true ;;
     -h|--help) usage; exit 0 ;;
     *) fail "unknown argument: $1" ;;
   esac
@@ -58,3 +62,11 @@ for stage in "06-demo-incident" "05-alerts-adapter" "04-spoke-registration" \
   printf '=== removing %s ===\n' "$stage"
   run_stage "$stage" uninstall
 done
+
+# MCE was the first prerequisite installed, so detach the spoke last. This is a
+# partial teardown: the operator and MultiClusterEngine instance are left in
+# place (see manifests/00-mce/uninstall.sh).
+if [[ "$mce" == true ]]; then
+  printf '=== removing 00-mce ===\n'
+  run_stage "00-mce" uninstall
+fi

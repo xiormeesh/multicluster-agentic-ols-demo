@@ -1,0 +1,10 @@
+# Import the demo spoke into MCE. Paired with auto-import-secret, which bootstraps
+# the klusterlet on the spoke (no spoke pre-install). The cluster-proxy add-on is
+# a separate manifest (cluster-proxy-addon.yaml) because some MCE installs auto-
+# deploy it via a global placement, so install.sh only creates it when missing.
+apiVersion: cluster.open-cluster-management.io/v1
+kind: ManagedCluster
+metadata:
+  name: ${SPOKE_NAME}
+spec:
+  hubAcceptsClient: true

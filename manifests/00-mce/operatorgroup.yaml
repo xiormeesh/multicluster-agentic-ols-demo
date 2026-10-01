@@ -1,0 +1,11 @@
+# OperatorGroup for a fresh MCE operator install. install.sh creates this only
+# when no OperatorGroup already exists in the namespace: a second OperatorGroup
+# in one namespace makes OLM unable to pick one and breaks the CSV.
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: multicluster-engine
+  namespace: multicluster-engine
+spec:
+  targetNamespaces:
+  - multicluster-engine
