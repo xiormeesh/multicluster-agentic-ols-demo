@@ -32,7 +32,7 @@ mce=false
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --confirm-namespace-wipe) ;; # accepted for backward compat, no longer required
-    --mce) mce=true ;;
+    --mce) mce=true; export DEMO_MCE=true ;;
     -h|--help) usage; exit 0 ;;
     *) fail "unknown argument: $1" ;;
   esac

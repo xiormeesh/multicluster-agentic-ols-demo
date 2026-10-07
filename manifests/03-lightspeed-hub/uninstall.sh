@@ -9,7 +9,10 @@ source "$DIR/../../scripts/common.sh"
 load_demo_config
 require_cluster_config
 
-if hub_exists crd spokeclusters.hub.openshift.io; then
+# In MCE mode the discovery controller removes auto-discovered SpokeClusters
+# when HubConfig is deleted, so the pre-check is skipped; instead we wait for
+# spokes to drain after deleting HubConfig below.
+if [[ "${DEMO_MCE:-}" != true ]] && hub_exists crd spokeclusters.hub.openshift.io; then
   spokes="$(hub_oc get spokeclusters.hub.openshift.io -o name)" || fail 'cannot list registered spokes'
   [[ -z "$spokes" ]] || fail "remove registered spokes before uninstalling lightspeed-hub: $spokes"
 fi
@@ -31,6 +34,24 @@ if hub_exists crd hubconfigs.hub.openshift.io; then
       hub_oc wait --for=delete hubconfig/cluster --timeout=60s || \
         fail 'HubConfig/cluster remains after known-finalizer cleanup'
     fi
+  fi
+fi
+
+# In MCE mode, wait for the discovery controller to remove auto-discovered
+# SpokeClusters now that HubConfig is gone.
+if [[ "${DEMO_MCE:-}" == true ]] && hub_exists crd spokeclusters.hub.openshift.io; then
+  printf 'Waiting up to 60s for auto-discovered SpokeClusters to drain...\n' >&2
+  for _ in $(seq 1 60); do
+    spokes="$(hub_oc get spokeclusters.hub.openshift.io -o name 2>/dev/null)" || break
+    [[ -n "$spokes" ]] || break
+    sleep 1
+  done
+  if spokes="$(hub_oc get spokeclusters.hub.openshift.io -o name 2>/dev/null)" && [[ -n "$spokes" ]]; then
+    # Force-clear the known discovery finalizer on remaining spokes.
+    while IFS= read -r spoke; do
+      [[ -n "$spoke" ]] || continue
+      clear_hub_finalizers "$spoke" 'hub.openshift.io/spoke-cleanup'
+    done <<< "$spokes"
   fi
 fi
 # If HubConfig was already missing, its adapter cleanup never ran. These
