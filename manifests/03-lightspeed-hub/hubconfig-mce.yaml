@@ -1,0 +1,10 @@
+apiVersion: hub.openshift.io/v1alpha1
+kind: HubConfig
+metadata:
+  name: cluster
+spec:
+  clusterRegistryMode: mce
+  mce:
+    selector:
+      matchLabels:
+        name: spoke

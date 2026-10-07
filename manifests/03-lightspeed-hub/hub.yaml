@@ -65,10 +65,3 @@ spec:
           limits:
             cpu: 500m
             memory: 256Mi
----
-apiVersion: hub.openshift.io/v1alpha1
-kind: HubConfig
-metadata:
-  name: cluster
-spec:
-  clusterRegistryMode: secret

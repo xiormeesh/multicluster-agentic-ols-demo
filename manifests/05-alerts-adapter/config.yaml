@@ -1,5 +1,5 @@
 pollInterval: "45s"
-preRunDelay: "10m"
+preRunDelay: "10s"
 postRunDelay: "2h"
 filtering:
   allowedReceivers:

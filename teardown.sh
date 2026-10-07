@@ -28,22 +28,16 @@ Options:
 USAGE
 }
 
-confirmed=false
 mce=false
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --confirm-namespace-wipe) confirmed=true ;;
+    --confirm-namespace-wipe) ;; # accepted for backward compat, no longer required
     --mce) mce=true ;;
     -h|--help) usage; exit 0 ;;
     *) fail "unknown argument: $1" ;;
   esac
   shift
 done
-
-if [[ "$confirmed" != true ]]; then
-  usage >&2
-  fail 'nothing removed. To proceed with this namespace-wide wipe, run: ./teardown.sh --confirm-namespace-wipe'
-fi
 load_demo_config
 require_cluster_config
 
@@ -57,8 +51,15 @@ if hub_exists crd spokeclusters.hub.openshift.io; then
   done <<< "$spokes"
 fi
 
+# In MCE mode, skip stage 04 (setup skips it too — discovery handles spokes).
+# Stage 03 deletes HubConfig, which triggers the discovery controller to clean
+# up all auto-discovered SpokeClusters before the hub is removed.
 for stage in "06-demo-incident" "05-alerts-adapter" "04-spoke-registration" \
   "03-lightspeed-hub" "02-agent-and-llm" "01-agentic-ols"; do
+  if [[ "$mce" == true && "$stage" == "04-spoke-registration" ]]; then
+    printf '=== skipping %s (MCE mode) ===\n' "$stage"
+    continue
+  fi
   printf '=== removing %s ===\n' "$stage"
   run_stage "$stage" uninstall
 done
