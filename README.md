@@ -72,6 +72,34 @@ No manual spoke-side setup is needed.
 Set `MCE_CHANNEL` in `.env` to override the operator channel (default
 `stable-2.11`).
 
+## Approval policy
+
+By default the demo deploys an ApprovalPolicy with Analysis and Execution
+set to **Manual** — each stage pauses for human approval, which is useful
+for interactive demos.
+
+To switch all stages to automatic (required for unattended e2e tests):
+
+```bash
+oc patch approvalpolicy cluster --type=merge -p '\
+  {"spec":{"stages":[\
+    {"name":"Analysis","approval":"Automatic"},\
+    {"name":"Execution","approval":"Automatic"},\
+    {"name":"Verification","approval":"Automatic"},\
+    {"name":"Escalation","approval":"Automatic"}]}}'
+```
+
+To restore manual approval:
+
+```bash
+oc patch approvalpolicy cluster --type=merge -p '\
+  {"spec":{"stages":[\
+    {"name":"Analysis","approval":"Manual"},\
+    {"name":"Execution","approval":"Manual"},\
+    {"name":"Verification","approval":"Automatic"},\
+    {"name":"Escalation","approval":"Automatic"}]}}'
+```
+
 ## Demo incident
 
 ```bash
